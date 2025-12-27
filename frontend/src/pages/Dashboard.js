@@ -6,7 +6,7 @@ import {
   BanknotesIcon,
   CreditCardIcon,
   ChartBarIcon,
-  PlusIcon, // Importamos el ícono Plus
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 import {
   BarChart,
@@ -30,20 +30,32 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const navigate = useNavigate(); // Hook para navegar
+  const navigate = useNavigate();
 
   const months = Array.from({ length: 12 }, (_, i) => ({
     value: i + 1,
     label: getMonthName(i + 1),
   }));
 
-  const years = Array.from({ length: 5 }, (_, i) => ({
-    value: new Date().getFullYear() - i,
-    label: (new Date().getFullYear() - i).toString(),
-  }));
+  // --- AQUÍ ESTÁ EL CAMBIO ---
+  // Lógica dinámica para los años:
+  // Calcula desde el 2021 hasta el año próximo (ej: 2026) automáticamente.
+  const currentYear = new Date().getFullYear();
+  const startYear = 2021; // Año base de tu app
+  const endYear = currentYear + 1; // Permite ver el futuro (2026)
+
+  const years = Array.from(
+    { length: endYear - startYear + 1 },
+    (_, i) => {
+      const year = endYear - i; // Orden descendente (2026, 2025, 2024...)
+      return { value: year, label: year.toString() };
+    }
+  );
+  // ---------------------------
 
   useEffect(() => {
     fetchDashboardData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedMonth, selectedYear]);
 
   const fetchDashboardData = async () => {
