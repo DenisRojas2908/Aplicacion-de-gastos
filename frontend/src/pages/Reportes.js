@@ -3,8 +3,8 @@ import {
   ChartBarIcon,
   CalendarIcon,
   BanknotesIcon,
-  ArrowTrendingUpIcon,   // Corregido
-  ArrowTrendingDownIcon, // Corregido
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
 } from '@heroicons/react/24/outline';
 import {
   BarChart,
@@ -23,7 +23,6 @@ import {
 } from 'recharts';
 import axios from '../utils/axios';
 import LoadingSpinner from '../components/LoadingSpinner';
-// AGREGADO formatDate AQUÍ:
 import { formatCurrency, getMonthName, formatDate } from '../utils/formatters';
 import toast from 'react-hot-toast';
 
@@ -40,6 +39,7 @@ const Reportes = () => {
 
   useEffect(() => {
     fetchReportData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, selectedYear]);
 
   const fetchReportData = async () => {
@@ -149,13 +149,13 @@ const ReporteMensual = ({ data }) => {
     { name: 'Balance', value: balanceMes || 0, color: balanceMes >= 0 ? '#2E865F' : '#E57373' },
   ];
 
-  // Datos para gráfico de pastel
+  // CORRECCIÓN AQUÍ: Usamos || para buscar el nombre en ambas propiedades
   const pieChartData = (gastosPorCategoria || [])
     .filter(cat => cat.total > 0)
     .map(cat => ({
-      name: cat.categoria_nombre,
+      name: cat.categoria_nombre || cat.nombre || 'Otros', 
       value: parseFloat(cat.total),
-      color: cat.categoria_color,
+      color: cat.categoria_color || cat.color || '#999',
     }));
 
   const COLORS = ['#FF6B35', '#8D6E63', '#2E865F', '#E57373', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'];
@@ -265,12 +265,13 @@ const ReporteMensual = ({ data }) => {
             </thead>
             <tbody>
               {gastosPorCategoria && gastosPorCategoria.length > 0 ? (
-                gastosPorCategoria.map((cat) => (
-                  <tr key={cat.id} className="border-b border-neutral-100 hover:bg-neutral-50">
+                gastosPorCategoria.map((cat, index) => (
+                  <tr key={index} className="border-b border-neutral-100 hover:bg-neutral-50">
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-2">
-                        <span className="text-lg">{cat.categoria_icono}</span>
-                        <span className="font-medium">{cat.categoria_nombre}</span>
+                        {/* CORRECCIÓN AQUÍ: Usamos || para icono y nombre */}
+                        <span className="text-lg">{cat.categoria_icono || cat.icono || '📦'}</span>
+                        <span className="font-medium">{cat.categoria_nombre || cat.nombre || 'Sin nombre'}</span>
                       </div>
                     </td>
                     <td className="text-right py-3 px-4 font-semibold text-danger-600">
@@ -368,13 +369,14 @@ const ReporteAnual = ({ data }) => {
         <div className="space-y-4">
           {topCategorias && topCategorias.length > 0 ? (
             topCategorias.map((cat, index) => (
-              <div key={cat.id} className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-4 bg-neutral-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center text-sm font-bold">
                     {index + 1}
                   </div>
                   <div>
-                    <p className="font-medium text-neutral-800">{cat.categoria_nombre}</p>
+                    {/* CORRECCIÓN AQUÍ TAMBIÉN */}
+                    <p className="font-medium text-neutral-800">{cat.categoria_nombre || cat.nombre || 'Sin nombre'}</p>
                     <p className="text-sm text-neutral-500">{cat.cantidad} transacciones</p>
                   </div>
                 </div>
@@ -433,11 +435,13 @@ const EstadisticasGenerales = ({ data }) => {
           <div className="flex items-center justify-between p-6 bg-gradient-to-r from-danger-50 to-primary-50 rounded-xl">
             <div className="flex items-center space-x-4">
               <div className="w-16 h-16 bg-danger-100 rounded-2xl flex items-center justify-center text-3xl">
-                {categoriaMayorGasto.categoria_icono}
+                {/* CORRECCIÓN AQUÍ */}
+                {categoriaMayorGasto.categoria_icono || categoriaMayorGasto.icono || '📦'}
               </div>
               <div>
                 <p className="text-xl font-bold text-neutral-800">
-                  {categoriaMayorGasto.categoria_nombre}
+                  {/* CORRECCIÓN AQUÍ */}
+                  {categoriaMayorGasto.categoria_nombre || categoriaMayorGasto.nombre || 'Sin nombre'}
                 </p>
                 <p className="text-neutral-600">
                   Total gastado: {formatCurrency(categoriaMayorGasto.total)}
