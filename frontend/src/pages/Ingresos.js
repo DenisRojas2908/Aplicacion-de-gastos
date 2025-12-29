@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import {
   PlusIcon,
   PencilIcon,
@@ -17,13 +16,30 @@ const Ingresos = () => {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingIngreso, setEditingIngreso] = useState(null);
+  
+  // Configuración inicial de filtros
   const [filters, setFilters] = useState({
     mes: new Date().getMonth() + 1,
     anio: new Date().getFullYear(),
   });
 
+  // --- LÓGICA INTELIGENTE DE AÑOS (Nueva) ---
+  const currentYear = new Date().getFullYear();
+  const startYear = 2021; 
+  const endYear = currentYear + 1; // Habilita 2026
+
+  const years = Array.from(
+    { length: endYear - startYear + 1 },
+    (_, i) => {
+      const year = endYear - i;
+      return { value: year, label: year.toString() };
+    }
+  );
+  // ------------------------------------------
+
   useEffect(() => {
     fetchIngresos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters]);
 
   const fetchIngresos = async () => {
@@ -118,9 +134,9 @@ const Ingresos = () => {
               onChange={(e) => setFilters(prev => ({ ...prev, anio: parseInt(e.target.value) }))}
               className="form-input"
             >
-              {Array.from({ length: 5 }, (_, i) => (
-                <option key={i} value={new Date().getFullYear() - i}>
-                  {new Date().getFullYear() - i}
+              {years.map((year) => (
+                <option key={year.value} value={year.value}>
+                  {year.label}
                 </option>
               ))}
             </select>

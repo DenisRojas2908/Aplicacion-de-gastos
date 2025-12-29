@@ -2,16 +2,23 @@ const pool = require('../config/database');
 
 class Gasto {
   static async crear({ usuarioId, categoriaId, metodoPagoId, monto, descripcion, fecha }) {
-    const fechaObj = new Date(fecha);
-    const mes = fechaObj.getMonth() + 1;
-    const anio = fechaObj.getFullYear();
+    // CORRECCIÓN 1: Manejo robusto de fechas
+    // Si no hay fecha, usamos la de hoy.
+    const fechaInput = fecha || new Date();
+    const fechaObj = new Date(fechaInput);
+
+    // CORRECCIÓN 2: Usamos UTC para extraer mes y año
+    // Esto evita que "1 de Agosto" se convierta en "31 de Julio" por culpa de la zona horaria.
+    const mes = fechaObj.getUTCMonth() + 1; 
+    const anio = fechaObj.getUTCFullYear();
 
     const query = `
       INSERT INTO gastos (usuario_id, categoria_id, metodo_pago_id, monto, descripcion, fecha, mes, anio)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING *
     `;
-    const values = [usuarioId, categoriaId, metodoPagoId, monto, descripcion, fecha, mes, anio];
+    // Usamos fechaInput directo
+    const values = [usuarioId, categoriaId, metodoPagoId, monto, descripcion, fechaInput, mes, anio];
     const result = await pool.query(query, values);
     return result.rows[0];
   }
@@ -52,6 +59,7 @@ class Gasto {
       values.push(filtros.fechaFin);
     }
 
+    // Ordenamos por fecha descendente (lo más nuevo primero)
     query += ' ORDER BY g.fecha DESC, g.created_at DESC';
 
     const result = await pool.query(query, values);
@@ -108,11 +116,11 @@ class Gasto {
       const fechaObj = new Date(datos.fecha);
       paramIndex++;
       campos.push(`mes = $${paramIndex}`);
-      values.push(fechaObj.getMonth() + 1);
+      values.push(fechaObj.getUTCMonth() + 1); // CORREGIDO: UTC
       
       paramIndex++;
       campos.push(`anio = $${paramIndex}`);
-      values.push(fechaObj.getFullYear());
+      values.push(fechaObj.getUTCFullYear()); // CORREGIDO: UTC
     }
 
     if (campos.length === 0) {
@@ -136,7 +144,6 @@ class Gasto {
     return result.rows[0];
   }
 
-  // CORREGIDO: Ahora devuelve los nombres de columnas que el Frontend espera
   static async obtenerTotalesPorCategoria(usuarioId, mes, anio) {
     const query = `
       SELECT c.id, 

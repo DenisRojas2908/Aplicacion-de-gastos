@@ -24,13 +24,14 @@ router.get('/', authenticateToken, async (req, res) => {
   }
 });
 
-// Crear un nuevo gasto
+// Crear un nuevo gasto (CORREGIDO)
 router.post('/', authenticateToken, [
   body('categoriaId').isInt().withMessage('La categoría es requerida'),
   body('metodoPagoId').isInt().withMessage('El método de pago es requerido'),
   body('monto').isFloat({ min: 0 }).withMessage('El monto debe ser un número positivo'),
   body('descripcion').trim().isLength({ min: 1 }).withMessage('La descripción es requerida'),
-  body('fecha').isISO8601().withMessage('La fecha debe ser válida')
+  // Hemos hecho la fecha opcional en el validator, la manejamos abajo
+  body('fecha').optional()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -40,13 +41,16 @@ router.post('/', authenticateToken, [
 
     const { categoriaId, metodoPagoId, monto, descripcion, fecha } = req.body;
 
+    // Lógica de seguridad: Si no envían fecha, usamos la actual
+    const fechaFinal = fecha || new Date();
+
     const gasto = await Gasto.crear({
       usuarioId: req.user.id,
       categoriaId,
       metodoPagoId,
       monto,
       descripcion,
-      fecha
+      fecha: fechaFinal // Usamos la fecha asegurada
     });
 
     res.status(201).json(gasto);
@@ -74,7 +78,7 @@ router.get('/:id', authenticateToken, async (req, res) => {
 router.put('/:id', authenticateToken, [
   body('monto').optional().isFloat({ min: 0 }).withMessage('El monto debe ser un número positivo'),
   body('descripcion').optional().trim().isLength({ min: 1 }).withMessage('La descripción no puede estar vacía'),
-  body('fecha').optional().isISO8601().withMessage('La fecha debe ser válida')
+  body('fecha').optional()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -156,4 +160,4 @@ router.get('/estadisticas/metodos-pago', authenticateToken, async (req, res) => 
   }
 });
 
-module.exports = router;
+module.exports = router;  
