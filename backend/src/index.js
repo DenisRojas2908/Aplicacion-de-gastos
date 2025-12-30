@@ -17,7 +17,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // SOLUCIÓN AL ERROR ROJO (Trust Proxy)
-// Esto es obligatorio cuando usas rate-limit detrás de un proxy (como Render o a veces local)
+// Esto es obligatorio cuando usas rate-limit detrás de un proxy (como Render)
 app.set('trust proxy', 1);
 
 // Configuración de rate limiting
@@ -29,16 +29,45 @@ const limiter = rateLimit({
 
 // Middlewares
 app.use(helmet());
+
+// --- INICIO DE CONFIGURACIÓN CORS CORREGIDA ---
+// Lista blanca de orígenes permitidos
+const allowedOrigins = [
+  process.env.FRONTEND_URL,                      // Tu variable de entorno (si existe)
+  'https://finanzas-frontend-49li.onrender.com', // Tu Web en producción
+  'http://localhost:3000',                       // Desarrollo local
+  'capacitor://localhost',                       // App Android/iOS (Capacitor)
+  'http://localhost',                            // Webview Android estándar
+  'http://localhost:3001'                        // Por si acaso te llamas a ti mismo
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Permitir solicitudes sin origen (como Apps móviles nativas o Postman)
+    if (!origin) return callback(null, true);
+    
+    // Verificar si el origen está en la lista blanca
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      return callback(null, true);
+    } else {
+      // Opcional: Para desarrollo, puedes descomentar la siguiente línea para ver quién está fallando
+      // console.log('Origen bloqueado por CORS:', origin);
+      
+      // Si quieres ser estricto, devuelve error. 
+      // Si quieres que funcione SÍ o SÍ, cambia el error por 'return callback(null, true);'
+      return callback(new Error('No permitido por CORS (Origen: ' + origin + ')'));
+    }
+  },
   credentials: true
 }));
+// --- FIN DE CONFIGURACIÓN CORS ---
+
 app.use(morgan('combined'));
 app.use(limiter);
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Rutas (Ya tienen el prefijo /api, ¡esto está bien!)
+// Rutas
 app.use('/api/auth', authRoutes);
 app.use('/api/gastos', gastosRoutes);
 app.use('/api/ingresos', ingresosRoutes);
