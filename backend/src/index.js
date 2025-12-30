@@ -33,12 +33,13 @@ app.use(helmet());
 // --- INICIO DE CONFIGURACIÓN CORS CORREGIDA ---
 // Lista blanca de orígenes permitidos
 const allowedOrigins = [
-  process.env.FRONTEND_URL,                      // Tu variable de entorno (si existe)
-  'https://finanzas-frontend-49li.onrender.com', // Tu Web en producción
-  'http://localhost:3000',                       // Desarrollo local
-  'capacitor://localhost',                       // App Android/iOS (Capacitor)
-  'http://localhost',                            // Webview Android estándar
-  'http://localhost:3001'                        // Por si acaso te llamas a ti mismo
+  process.env.FRONTEND_URL,
+  'https://finanzas-frontend-49li.onrender.com',
+  'http://localhost:3000',
+  'capacitor://localhost',
+  'http://localhost',       // El que tenías
+  'https://localhost',      // <--- ¡AGREGA ESTA LÍNEA NUEVA! (Android Capacitor Secure)
+  'http://localhost:3001' 
 ];
 
 app.use(cors({
