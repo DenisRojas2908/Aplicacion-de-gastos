@@ -1,28 +1,26 @@
 const { Pool } = require('pg');
 require('dotenv').config();
 
-// Detectamos si estamos en producción (Render) o en local
 const isProduction = process.env.NODE_ENV === 'production';
 
-// Cadena de conexión para TU COMPUTADORA (Local)
+// Conexión LOCAL: Usa tus variables actuales de .env
 const connectionStringLocal = `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`;
 
-// Cadena de conexión para RENDER (Nube)
-// Render nos dará una variable llamada INTERNAL_DATABASE_URL automáticamente
-const connectionStringProd = process.env.INTERNAL_DATABASE_URL;
+// Conexión NUBE (Supabase): En Render configuraremos la variable DATABASE_URL
+const connectionStringProd = process.env.DATABASE_URL;
 
 const pool = new Pool({
   connectionString: isProduction ? connectionStringProd : connectionStringLocal,
-  // ¡IMPORTANTE! Render necesita SSL. Si es producción, lo activamos.
+  // Supabase siempre requiere SSL. En local usualmente no es necesario.
   ssl: isProduction ? { rejectUnauthorized: false } : false
 });
 
 pool.on('connect', () => {
-  console.log('✅ Conectado a PostgreSQL');
+  console.log(isProduction ? '☁️ Conectado a Supabase (Producción)' : '🏠 Conectado a PostgreSQL Local');
 });
 
 pool.on('error', (err) => {
-  console.error('❌ Error en la conexión a PostgreSQL:', err);
+  console.error('❌ Error en la conexión:', err);
 });
 
 module.exports = pool;
